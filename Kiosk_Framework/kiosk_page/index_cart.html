@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+  <title>장바구니</title>
+  <style>
+    /* 기본 스타일 설정 */
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    .panel-container {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .panel {
+      margin: 10px;
+      border: 1px solid #ddd;
+      padding: 10px;
+      width: 200px;
+      text-align: center;
+    }
+
+    .panel img {
+      width: 100%;
+      height: auto;
+    }
+
+    .button_st {
+      margin: 10px;
+      padding: 10px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>장바구니</header>
+  <div class="panel-container" id="cartItemsContainer">
+    <!-- 음식 아이템들이 여기에 추가될 것입니다. -->
+  </div>
+  <button class="button_st" id="deleteButton">삭제</button>
+</body>
+<script>
+  // 로컬스토리지에서 장바구니 아이템들을 가져오기
+  let cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
+
+  // 장바구니 아이템들을 화면에 표시하는 함수
+  let displayCartItems = function () {
+    const container = document.getElementById('cartItemsContainer');
+    container.innerHTML = ''; // 기존 내용 삭제
+
+    cartItems.forEach((item, index) => {
+      const panel = document.createElement('div');
+      panel.className = 'panel';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = 'item_' + index;
+      checkbox.value = item;
+
+      const img = document.createElement('img');
+      img.src = 'img/' + item + '.jpg';
+      img.alt = item;
+
+      const name = document.createElement('p');
+      name.textContent = item;
+
+      panel.appendChild(checkbox);
+      panel.appendChild(img);
+      panel.appendChild(name);
+
+      container.appendChild(panel);
+    });
+  };
+
+  // 삭제 버튼 클릭 시 선택된 아이템들을 삭제하는 함수
+  document
+    .getElementById('deleteButton')
+    .addEventListener('click', function () {
+      const selectedItems = document.querySelectorAll(
+        'input[type=checkbox]:checked'
+      );
+      selectedItems.forEach((item) => {
+        const index = cartItems.indexOf(item.value);
+        if (index > -1) {
+          cartItems.splice(index, 1);
+        }
+      });
+      localStorage.setItem('cartItems', JSON.stringify(cartItems));
+      displayCartItems();
+    });
+
+  // 초기 장바구니 아이템 표시
+  displayCartItems();
+</script>
+
+</html>

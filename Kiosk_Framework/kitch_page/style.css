@@ -1,0 +1,114 @@
+@charset "utf-8";
+@font-face {
+  font-family: NG;
+  src: local(※), url(NanumGothic.woff) format('woff');
+}
+
+body {
+  line-height: 1;
+  font-family: NG, sans-serif;
+  -webkit-text-size-adjust: none;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  font: normal NG;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #fefae0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+a:hover,
+a:visited,
+a:link,
+a:active {
+  text-decoration: none;
+}
+
+header {
+  background-color: #e9edc9;
+  border-radius: 25px;
+  color: #432818;
+  text-align: center;
+  font-weight: bold;
+  font-size: 23px;
+  margin: 45px 80px 20px 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.panel-container {
+  width: 80%;
+  background-color: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.order-item {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid #ccc;
+  padding: 10px 0;
+}
+
+.order-item:last-child {
+  border-bottom: none;
+}
+
+.order-detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+}
+
+.order-item-detail {
+  margin-left: 20px;
+  font-size: 16px;
+}
+
+.order-id {
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.styled-button {
+  display: inline-block;
+  padding: 20px 40px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #ffffff;
+  background: linear-gradient(45deg, #d4a373, #bc8a5f);
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.styled-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+.styled-button:active {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.complete-button {
+  background: linear-gradient(45deg, #e9edc9, #d4a373);
+  color: #432818;
+}
+
+.complete-button:hover {
+  background: linear-gradient(45deg, #d4a373, #bc8a5f);
+}

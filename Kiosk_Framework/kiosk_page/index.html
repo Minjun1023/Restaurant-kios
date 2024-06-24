@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="../lib/signage.base.js"></script>
+  <title>키오스크</title>
+  <style>
+    /* 결제 모달 스타일 */
+    .payment-modal,
+    .card-modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 300px;
+      padding: 20px;
+      background-color: white;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    .payment-modal .close,
+    .card-modal .close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      cursor: pointer;
+    }
+
+    .payment-modal button,
+    .card-modal button {
+      margin: 10px;
+    }
+
+    .card-ui {
+      margin: 20px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+
+<body>
+  <header>음식점 키오스크</header>
+  <div class="panel-container">
+    <div class="panel">
+      <input type="checkbox" class="food-checkbox" value="냉모밀" />
+      <img src="img/냉모밀.jpg" alt="Panel 1 Image" onclick="orderDrink(1)" />
+      <p>냉모밀</p>
+      <p class="price">10000</p>
+    </div>
+    <div class="panel">
+      <input type="checkbox" class="food-checkbox" value="라멘" />
+      <img src="img/라멘.jpg" alt="Panel 2 Image" onclick="orderDrink(2)" />
+      <p>라멘</p>
+      <p class="price">12000</p>
+    </div>
+    <div class="panel">
+      <input type="checkbox" class="food-checkbox" value="샐러드" />
+      <img src="img/샐러드.jpg" alt="Panel 3 Image" onclick="orderDrink(3)" />
+      <p>샐러드</p>
+      <p class="price">8000</p>
+    </div>
+    <div class="panel">
+      <input type="checkbox" class="food-checkbox" value="알리올리오해물파스타" />
+      <img src="img/알리올리오해물파스타.jpg" alt="Panel 4 Image" onclick="orderDrink(4)" />
+      <p>알리올리오해물파스타</p>
+      <p class="price">15000</p>
+    </div>
+    <div class="panel">
+      <input type="checkbox" class="food-checkbox" value="오므라이스" />
+      <img src="img/오므라이스.jpg" alt="Panel 5 Image" onclick="orderDrink(5)" />
+      <p>오므라이스</p>
+      <p class="price">11000</p>
+    </div>
+    <div class="panel">
+      <input type="checkbox" class="food-checkbox" value="타코" />
+      <img src="img/타코.jpg" alt="Panel 6 Image" onclick="orderDrink(6)" />
+      <p>타코</p>
+      <p class="price">9000</p>
+    </div>
+    <div class="panel">
+      <input type="checkbox" class="food-checkbox" value="필라프" />
+      <img src="img/필라프.jpg" alt="Panel 7 Image" onclick="orderDrink(7)" />
+      <p>필라프</p>
+      <p class="price">10000</p>
+    </div>
+    <!-- 오늘의 추천메뉴 추가 -->
+    <div class="panel">
+      <p class="panel-recommend">오늘의 추천메뉴</p>
+    </div>
+  </div>
+
+  <div class="button-container">
+    <button class="button_st" id="TransButton">번역하기(Translate)</button>
+    <button class="button_st" id="big_font">글씨키우기</button>
+    <button class="button_st" id="call_staff">
+      직원 호출
+    </button>
+    <button class="button_st" id="add_to_cart_button">장바구니 담기</button>
+    <button class="button_st" id="view_cart_button">장바구니 보기</button>
+  </div>
+
+  <!-- 장바구니 모달 -->
+  <div id="cartModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>장바구니</h2>
+      <div id="cartItems"></div>
+      <p id="totalPrice">총 가격: 0원</p>
+      <button class="button_st" id="confirm_cart_button">장바구니에 담기</button>
+      <button class="button_st" id="place_order_button" style="display: none;">주문하기</button>
+    </div>
+  </div>
+
+  <!-- 결제 모달 -->
+  <div id="paymentModal" class="payment-modal">
+    <span class="close" onclick="closePaymentModal()">&times;</span>
+    <p id="paymentText"></p>
+    <p>결제 방법을 선택해주십시오.</p>
+    <button class="button_st" onclick="selectPaymentMethod('카드')">카드 결제</button>
+    <button class="button_st" onclick="completePayment('현금')">현금 결제</button>
+  </div>
+
+  <!-- 카드 결제 모달 -->
+  <div id="cardModal" class="card-modal">
+    <span class="close" onclick="closeCardModal()">&times;</span>
+    <p>카드를 넣어주세요.</p>
+    <div class="card-ui">[카드 넣는 UI]</div>
+    <button class="button_st" onclick="approveCardPayment()">카드 승인</button>
+  </div>
+
+  <script>
+    document
+      .getElementById('TransButton')
+      .addEventListener('click', function () {
+        window.location.href = 'index_eng.html';
+      });
+    document
+      .getElementById('big_font')
+      .addEventListener('click', function () {
+        window.location.href = 'index_big.html';
+      });
+    document
+      .getElementById('call_staff')
+      .addEventListener('click', function () {
+        callStaff();
+      });
+
+    let selectedItems = [];
+    let cartItems = [];
+    let orderId = '';
+
+    document.querySelectorAll('.food-checkbox').forEach((checkbox) => {
+      checkbox.addEventListener('change', function () {
+        if (this.checked) {
+          selectedItems.push({
+            name: this.value,
+            price: parseInt(
+              this.parentElement
+                .querySelector('.price')
+                .innerText
+            ),
+            quantity: 1
+          });
+        } else {
+          selectedItems = selectedItems.filter(
+            (item) => item.name !== this.value
+          );
+        }
+      });
+    });
+
+    document
+      .getElementById('add_to_cart_button')
+      .addEventListener('click', function () {
+        displayCartItems(selectedItems, false);
+      });
+
+    document
+      .getElementById('view_cart_button')
+      .addEventListener('click', function () {
+        displayCartItems(cartItems, true);
+      });
+
+    document.querySelector('.close').addEventListener('click', function () {
+      const cartModal = document.getElementById('cartModal');
+      cartModal.style.display = 'none';
+    });
+
+    document
+      .getElementById('confirm_cart_button')
+      .addEventListener('click', function () {
+        cartItems = [...cartItems, ...selectedItems];
+        selectedItems = [];
+        document.querySelectorAll('.food-checkbox').forEach((checkbox) => {
+          checkbox.checked = false;
+        });
+        alert('장바구니에 담았습니다.');
+        const cartModal = document.getElementById('cartModal');
+        cartModal.style.display = 'none';
+      });
+
+    document
+      .getElementById('place_order_button')
+      .addEventListener('click', function () {
+        const totalPrice = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+        document.getElementById('paymentText').innerText = `${totalPrice}원 결제`;
+        const paymentModal = document.getElementById('paymentModal');
+        paymentModal.style.display = 'block';
+      });
+
+    function displayCartItems(items, isCartView) {
+      const cartItemsDiv = document.getElementById('cartItems');
+      cartItemsDiv.innerHTML = '';
+
+      items.forEach((item) => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'cart-item';
+        itemDiv.innerHTML = `
+            <span>${item.name}</span>
+            <button class="quantity-btn" onclick="changeQuantity('${item.name}', -1)">-</button>
+            <span class="quantity" id="quantity-${item.name}">${item.quantity}</span>
+            <button class="quantity-btn" onclick="changeQuantity('${item.name}', 1)">+</button>
+            <span class="item-price">${item.price}원</span>
+            ${isCartView ? `<button class="delete-btn" onclick="deleteItem('${item.name}')">삭제</button>` : ''}
+          `;
+        cartItemsDiv.appendChild(itemDiv);
+      });
+
+      updateTotalPrice(items);
+
+      const cartModal = document.getElementById('cartModal');
+      cartModal.style.display = 'block';
+
+      document.getElementById('confirm_cart_button').style.display = isCartView ? 'none' : 'block';
+      document.getElementById('place_order_button').style.display = isCartView ? 'block' : 'none';
+    }
+
+    function changeQuantity(itemName, change) {
+      const item = selectedItems.find((item) => item.name === itemName) || cartItems.find((item) => item.name === itemName);
+      const quantityElement = document.getElementById(`quantity-${itemName}`);
+      let quantity = parseInt(quantityElement.innerText);
+      quantity += change;
+      if (quantity < 1) quantity = 1;
+      quantityElement.innerText = quantity;
+      item.quantity = quantity;
+      updateTotalPrice(selectedItems.includes(item) ? selectedItems : cartItems);
+    }
+
+    function updateTotalPrice(items) {
+      let totalPrice = 0;
+      items.forEach((item) => {
+        totalPrice += item.price * item.quantity;
+      });
+
+      const totalPriceElement = document.getElementById('totalPrice');
+      totalPriceElement.innerText = `총 가격: ${totalPrice}원`;
+    }
+
+    function deleteItem(itemName) {
+      cartItems = cartItems.filter(item => item.name !== itemName);
+      displayCartItems(cartItems, true);
+    }
+
+    function closePaymentModal() {
+      const paymentModal = document.getElementById('paymentModal');
+      paymentModal.style.display = 'none';
+    }
+
+    function selectPaymentMethod(method) {
+      if (method === '카드') {
+        const paymentModal = document.getElementById('paymentModal');
+        paymentModal.style.display = 'none';
+        const cardModal = document.getElementById('cardModal');
+        cardModal.style.display = 'block';
+      } else {
+        completePayment(method);
+      }
+    }
+
+    function closeCardModal() {
+      const cardModal = document.getElementById('cardModal');
+      cardModal.style.display = 'none';
+    }
+
+    function approveCardPayment() {
+      completePayment('카드');
+    }
+
+    function completePayment(method) {
+      const orderData = {
+        items: cartItems
+      };
+
+      if (method === '현금') {
+        alert('현금 결제는 직원을 호출해주세요.');
+        return;
+      }
+
+      fetch('/kiosk_page/payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(orderData)
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (method === '카드' && data.status === 'ok') {
+            alert(`${method} 결제가 완료되었습니다. 주문이 완료되었습니다.`);
+            closePaymentModal();
+            closeCardModal();
+            cartItems = [];  // 주문이 완료되면 장바구니 초기화
+          } else if (method === '현금') {
+            // 현금 결제는 직원 호출 메시지만 띄우고, 장바구니 초기화는 하지 않음
+            alert('현금 결제는 직원을 호출해주세요.');
+          } else {
+            alert('결제에 실패했습니다. 다시 시도해주세요.');
+          }
+        })
+        .catch(error => {
+          console.error('결제 중 오류 발생:', error);
+          alert('결제 과정에서 오류가 발생했습니다. 다시 시도해주세요.');
+        });
+    }
+
+    let orderDrink = function (drink) {
+      let data = new FormData();
+      data.append('order', drink);
+      POST('order', data, function (resp) {
+        console.log(resp + ':' + resp.data);
+      });
+    };
+
+    let callStaff = function () {
+      let data = new FormData();
+      data.append('message', '손님이 호출하였습니다.');
+      POST('callStaff', data, function (resp) {
+        alert('직원을 호출하였습니다. 조금만 기다려 주십시오.');
+      });
+    };
+
+    document
+      .querySelector('.panel-recommend')
+      .addEventListener('click', function () {
+        recommendMenu();
+      });
+
+    let foodList = [
+      { name: '냉모밀', img: 'img/냉모밀.jpg' },
+      { name: '라멘', img: 'img/라멘.jpg' },
+      { name: '샐러드', img: 'img/샐러드.jpg' },
+      { name: '알리올리오해물파스타', img: 'img/알리올리오해물파스타.jpg' },
+      { name: '오므라이스', img: 'img/오므라이스.jpg' },
+      { name: '타코', img: 'img/타코.jpg' },
+      { name: '필라프', img: 'img/필라프.jpg' },
+    ];
+
+    function recommendMenu() {
+      let randomIndex = Math.floor(Math.random() * foodList.length);
+      let recommendedMenu = foodList[randomIndex];
+      alert('오늘의 추천메뉴는 ' + recommendedMenu.name + ' 입니다.');
+      showRecommendedMenu(recommendedMenu);
+    }
+
+    function showRecommendedMenu(menu) {
+      const recommendDiv = document.querySelector('.panel-recommend');
+      recommendDiv.innerHTML = `
+          <p>오늘의 추천메뉴</p>
+          <img src="${menu.img}" alt="${menu.name}" />
+          <p>${menu.name}</p>
+        `;
+    }
+  </script>
+</body>
+
+</html>

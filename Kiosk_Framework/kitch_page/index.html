@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../lib/signage.base.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <title>주방</title>
+</head>
+
+<body>
+    <header>주방 주문 리스트</header>
+    <div class="panel-container" id="order_list"></div>
+    <button class="styled-button complete-button" onclick="completeSelectedOrders()">선택된 요리 완료</button>
+
+    <script>
+        let checkedItems = new Set();
+
+        let getOrder = function () {
+            let data = new FormData();
+            data.append("none", "none");
+            POST("getOrder", data, function (resp) {
+                let orderList = document.querySelector('#order_list');
+                let previousCheckedItems = new Set(checkedItems);
+                orderList.innerHTML = '';  // Clear the current list
+
+                resp.data.output.forEach(order => {
+                    let orderDiv = document.createElement('div');
+                    orderDiv.className = 'order-item';
+                    orderDiv.innerHTML = `
+                        <div>
+                            <p class="order-id">주문번호: ${order.order_id}</p>
+                            ${order.items.map(item => `
+                              <div class="order-detail">
+                                <p class="order-item-detail">${item.name} x ${item.quantity}</p>
+                                <input type="checkbox" class="order-checkbox" value="${order.order_id}-${item.name}" ${previousCheckedItems.has(order.order_id + '-' + item.name) ? 'checked' : ''}>
+                              </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    orderList.appendChild(orderDiv);
+                });
+
+                // 체크박스 이벤트 리스너 추가
+                document.querySelectorAll('.order-checkbox').forEach(checkbox => {
+                    checkbox.addEventListener('change', function () {
+                        if (this.checked) {
+                            checkedItems.add(this.value);
+                        } else {
+                            checkedItems.delete(this.value);
+                        }
+                    });
+                });
+            });
+        }
+
+        setInterval(() => {
+            getOrder();
+        }, 1000);
+
+        function completeSelectedOrders() {
+            let checkedBoxes = document.querySelectorAll('.order-checkbox:checked');
+            let itemsToDelete = Array.from(checkedBoxes).map(cb => cb.value);
+
+            // 'staff_call' 추가하여 직원 호출 삭제 요청
+            itemsToDelete.push('staff_call-deleteStaffCall');
+
+            if (itemsToDelete.length === 1 && itemsToDelete[0] === 'staff_call-deleteStaffCall') {
+                // 체크된 항목이 없을 경우
+                alert('완료할 주문을 선택해주세요.');
+                return;
+            }
+
+            if (itemsToDelete.length > 0) {
+                fetch('/kitch_page/completeOrder', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ items: itemsToDelete })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.data.output === 'completed') {
+                            alert('요리 완료되었습니다.');
+                            itemsToDelete.forEach(id => checkedItems.delete(id));
+                            getOrder(); // Refresh the order list
+                        } else {
+                            alert('요리 완료 처리에 실패했습니다. 다시 시도해주세요.');
+                        }
+                    });
+            } else {
+                alert('완료할 주문을 선택해주세요.');
+            }
+        }
+    </script>
+</body>
+
+</html>
